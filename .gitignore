@@ -1,0 +1,10 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+metadata.db
+faiss_index.bin
+run.log
+.DS_Store
+*.webm
+*.mp4

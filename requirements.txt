@@ -1,0 +1,10 @@
+crewai==1.15.5
+fastapi==0.136.1
+uvicorn==0.51.0
+pydantic<2.13,>=2.11.9
+python-dotenv
+litellm
+requests
+sentence-transformers
+faiss-cpu
+apscheduler

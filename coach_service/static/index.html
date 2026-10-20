@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ur_coach — your personal researcher</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;500;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#edf0f7;--surface:#fff;--ink:#16204a;--muted:#5d6788;--line:#d9deec;--brand:#4b3fd6;--brand-soft:#e6e4fb;--good:#0e9f8e;--mid:#d9961a;--low:#c2455b}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1530;--surface:#171f44;--ink:#eaedfb;--muted:#9aa5cf;--line:#2a3566;--brand:#8c82ff;--brand-soft:#262e63;--good:#37c9b6;--mid:#f0b94a;--low:#ff7d93}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",system-ui,sans-serif;line-height:1.75;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+h1,h2,h3,.brand,button,nav a{font-family:"Readex Pro","IBM Plex Sans",sans-serif}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;max-width:880px;margin:0 auto;padding:18px 20px}
+.brand{font-weight:700;font-size:1.15rem;display:flex;align-items:center;gap:8px}
+.dot{width:12px;height:12px;border-radius:50%;background:var(--brand);box-shadow:0 0 0 5px var(--brand-soft)}
+nav{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px}
+nav a{padding:6px 16px;border-radius:999px;text-decoration:none;font-size:.9rem;color:var(--muted);cursor:pointer}
+nav a[aria-current=true]{background:var(--brand);color:#fff}
+main{max-width:880px;margin:0 auto;padding:0 20px 80px}
+.hero{padding:40px 0 24px}
+.hero h1{font-size:clamp(2rem,6vw,3.4rem);line-height:1.25;margin:0 0 12px;font-weight:700;letter-spacing:-.01em}
+.hero p{color:var(--muted);font-size:1.1rem;margin:0;max-width:34em}
+.ask{background:var(--surface);border:1.5px solid var(--line);border-radius:22px;padding:14px;display:flex;gap:10px;align-items:flex-end;margin-top:22px;transition:border-color .2s,box-shadow .2s}
+.ask:focus-within{border-color:var(--brand);box-shadow:0 0 0 5px var(--brand-soft)}
+.ask textarea{flex:1;border:0;background:transparent;color:inherit;font:inherit;font-size:1.05rem;resize:none;min-height:56px;max-height:200px;outline:none}
+button{border:0;cursor:pointer;font-size:.95rem}
+.go{background:var(--brand);color:#fff;padding:12px 22px;border-radius:14px;font-weight:500}
+.go:disabled{opacity:.5;cursor:wait}
+.opts{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;margin:12px 4px;color:var(--muted);font-size:.9rem}
+.opts label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.chip{background:var(--surface);border:1px solid var(--line);color:var(--ink);padding:7px 14px;border-radius:999px}
+.chip:hover{border-color:var(--brand)}
+.answer{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:24px;margin-top:26px}
+.answer .q{color:var(--muted);font-size:.9rem;margin-bottom:8px}
+.answer .body{font-size:1.08rem}.answer .body p{margin:0 0 .7em}.answer .body ul{margin:0 0 .7em;padding-inline-start:1.3em}.answer .body li{margin-bottom:.4em}
+.cite{display:inline-grid;place-items:center;min-width:1.6em;height:1.6em;border-radius:8px;background:var(--brand-soft);color:var(--brand);font-size:.8rem;font-weight:500;text-decoration:none;margin:0 2px;vertical-align:1px}
+.status{margin-top:26px;display:flex;align-items:center;gap:12px;color:var(--muted)}
+.pulse{width:14px;height:14px;border-radius:50%;background:var(--brand);animation:p 1.2s ease-in-out infinite}
+@keyframes p{50%{transform:scale(1.7);opacity:.35}}
+@media (prefers-reduced-motion:reduce){.pulse{animation:none}}
+h2{font-size:1.15rem;margin:30px 0 12px}
+.sources{display:grid;gap:12px}
+.src{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px 16px;text-decoration:none;scroll-margin-top:20px}
+.src:target,.src:hover{border-color:var(--brand)}
+.ring{--v:70;--c:var(--good);width:54px;height:54px;border-radius:50%;background:conic-gradient(var(--c) calc(var(--v)*1%),var(--line) 0);display:grid;place-items:center;position:relative}
+.ring::before{content:"";position:absolute;inset:5px;border-radius:50%;background:var(--surface)}
+.ring b{position:relative;font-family:"Readex Pro",sans-serif;font-size:.85rem}
+.src h3{margin:0;font-size:1rem;font-weight:500}
+.src small{color:var(--muted)}
+.topic{display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px 18px;margin-bottom:10px}
+.topic .t{font-weight:500}
+.topic small{color:var(--muted);display:block}
+.ghost{background:transparent;border:1px solid var(--line);color:var(--ink);padding:7px 14px;border-radius:12px}
+.ghost:hover{border-color:var(--low);color:var(--low)}
+.follow{background:var(--brand-soft);border:1px dashed var(--brand);border-radius:18px;padding:14px 18px;margin-top:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.follow input{flex:1;min-width:180px;border:1px solid var(--line);background:var(--surface);color:inherit;font:inherit;border-radius:12px;padding:8px 12px}
+.follow button{background:var(--brand);color:#fff;padding:9px 18px;border-radius:12px;font-weight:500}
+.empty{color:var(--muted);padding:30px 0;text-align:center}
+.err{background:color-mix(in srgb,var(--low) 14%,var(--surface));border:1px solid var(--low);border-radius:16px;padding:14px 18px;margin-top:22px}
+.demo{display:inline-block;font-size:.8rem;color:var(--mid);border:1px solid var(--mid);border-radius:999px;padding:0 10px}
+.item{white-space:pre-wrap;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px 18px;margin-bottom:10px}
+.item small{color:var(--muted)}
+#gate{position:fixed;inset:0;background:var(--bg);display:grid;place-items:center;z-index:50;padding:20px}
+.gatebox{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:28px;max-width:380px;width:100%;display:grid;gap:12px}
+.gatebox h1{margin:0;font-size:1.6rem}.gatebox p{margin:0;color:var(--muted)}
+.gatebox input{border:1px solid var(--line);background:var(--bg);color:inherit;font:inherit;border-radius:12px;padding:12px 14px}
+[hidden]{display:none!important}
+@media (max-width:560px){header{flex-direction:column;align-items:stretch}nav{justify-content:space-between}}
+</style>
+</head>
+<body>
+<div id="gate" hidden><div class="gatebox"><h1>ur_coach</h1><p>Enter your invite code to continue.</p><input id="code" type="password" autocomplete="off" placeholder="Invite code" aria-label="Invite code"><button class="go" id="enter">Enter</button><div id="gerr" class="err" hidden></div></div></div>
+<header>
+  <div class="brand"><span class="dot"></span>ur_coach</div>
+  <nav aria-label="Main">
+    <a data-v="ask" aria-current="true" tabindex="0">Ask</a>
+    <a data-v="topics" tabindex="0">My topics</a>
+    <a data-v="digest" tabindex="0">Digest</a>
+  </nav>
+</header>
+<main>
+<section id="ask">
+  <div class="hero">
+    <h1>Ask. We'll read the research for you.</h1>
+    <p>Every answer is built on recent sources, numbered and scored for credibility. Follow any topic and it stays up to date on its own.</p>
+  </div>
+  <div class="ask">
+    <textarea id="q" maxlength="500" rows="2" placeholder="Ask anything…" aria-label="Your question"></textarea>
+    <button class="go" id="go">Ask</button>
+  </div>
+  <div class="opts">
+    <label><input type="checkbox" id="auto" checked> Search for new papers if my library isn't enough</label>
+    <span id="mode"></span>
+  </div>
+  <div class="chips" id="chips"></div>
+  <div id="out"></div>
+</section>
+<section id="topics" hidden>
+  <div class="hero"><h1>Your topics</h1><p>Refreshed every hour. Find what's new in the Digest tab.</p></div>
+  <div id="tlist"></div>
+</section>
+<section id="digest" hidden>
+  <div class="hero"><h1>New in your topics</h1><p>Pick a topic to see what was just added.</p></div>
+  <div class="chips" id="dchips"></div>
+  <div id="dout"></div>
+</section>
+</main>
+<script>
+const API_BASE = "";            // same origin that FastAPI serves the page from
+const API_KEY = "";             // leave empty: the backend adds the key (never put it in the browser)
+const SUGGEST = ["How do I build healthy relationships?","What improves sleep quality?","Does intermittent fasting really work?","How does exercise affect memory?"];
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const SCORE_MAX = 5;
+let demo = false, lastTopic = null;
+
+/* ---------- storage (user topics, temporarily in the browser) ---------- */
+const store = {
+  get(){ try{ return JSON.parse(localStorage.getItem("topics")||"[]") }catch(e){ return [] } },
+  set(v){ try{ localStorage.setItem("topics", JSON.stringify(v)) }catch(e){} }
+};
+
+/* ---------- API ---------- */
+async function api(path, opts={}){
+  const headers = {"Content-Type":"application/json"};
+  if(API_KEY) headers["X-API-Key"] = API_KEY;
+  const r = await fetch(API_BASE+path, {...opts, headers});
+  if(r.status === 401){ showGate(); throw new Error("auth"); }
+  if(r.status === 429) throw new Error("rate");
+  if(!r.ok) throw new Error("http "+r.status);
+  return r.json();
+}
+const DEMO_ANSWER = {
+  answer:"Research suggests relationship quality improves with active listening and responsiveness to a partner's needs [1]. Regular shared time also builds trust over the long term [2].\n\nThis is a demo answer: the server is not connected.",
+  topic:"healthy relationships",
+  sources:[{title:"Responsiveness and relationship quality: a review",url:"#",credibility_score:0.86},{title:"Shared time and long-term trust",url:"#",credibility_score:0.64}]
+};
+
+/* ---------- invite-code gate ---------- */
+function showGate(){ $("#gate").hidden = false; $("#code").focus(); }
+async function login(){
+  const code = $("#code").value.trim(), err = $("#gerr");
+  if(!code) return;
+  err.hidden = true;
+  try{
+    const r = await fetch(API_BASE+"/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({code})});
+    if(r.ok){ $("#gate").hidden = true; $("#code").value = ""; return; }
+    err.textContent = r.status===429 ? "Too many attempts. Wait a minute and try again." : "That code isn't valid.";
+  }catch(e){ err.textContent = "Can't reach the server."; }
+  err.hidden = false;
+}
+$("#enter").onclick = login;
+$("#code").onkeydown = e => { if(e.key==="Enter") login(); };
+(async()=>{ try{ const r = await fetch(API_BASE+"/me"); if(r.status===401) showGate(); }catch(e){} })();
+
+/* ---------- views ---------- */
+document.querySelectorAll("nav a").forEach(a=>{
+  const go=()=>show(a.dataset.v);
+  a.onclick=go; a.onkeydown=e=>{ if(e.key==="Enter"||e.key===" "){e.preventDefault();go()} };
+});
+function show(v){
+  ["ask","topics","digest"].forEach(id=>$("#"+id).hidden = id!==v);
+  document.querySelectorAll("nav a").forEach(a=>a.setAttribute("aria-current", a.dataset.v===v));
+  if(v==="topics") renderTopics();
+  if(v==="digest") renderDigestChips();
+}
+
+/* ---------- ask ---------- */
+$("#chips").innerHTML = SUGGEST.map(s=>`<button class="chip">${esc(s)}</button>`).join("");
+$("#chips").onclick = e => { if(e.target.matches(".chip")){ $("#q").value = e.target.textContent; ask(); } };
+$("#go").onclick = ask;
+$("#q").onkeydown = e => { if(e.key==="Enter" && (e.ctrlKey||e.metaKey)) ask(); };
+
+function ringColor(v){ return v>=70 ? "var(--good)" : v>=45 ? "var(--mid)" : "var(--low)"; }
+function normScore(s){ const n = Number(s.credibility_score ?? s.score ?? 0); return Math.min(SCORE_MAX, Math.max(0, n)); }
+
+async function ask(){
+  const query = $("#q").value.trim();
+  if(!query) return;
+  const out = $("#out"), btn = $("#go");
+  btn.disabled = true;
+  out.innerHTML = `<div class="status" role="status"><span class="pulse"></span><span>Searching your sources${$("#auto").checked?" and fetching new papers if needed (this can take a moment)":""}…</span></div>`;
+  let data;
+  try{
+    data = await api("/ask",{method:"POST",body:JSON.stringify({query,auto_research:$("#auto").checked})});
+    demo = false;
+  }catch(e){
+    if(e.message==="auth"){ out.innerHTML = ""; btn.disabled = false; return; }
+    if(e.message==="rate"){
+      out.innerHTML = `<div class="err">You hit the per-minute question limit. Wait a moment and try again.</div>`;
+      btn.disabled=false; return;
+    }
+    data = DEMO_ANSWER; demo = true;
+  }
+  $("#mode").innerHTML = demo ? `<span class="demo">Demo mode</span>` : "";
+  render(query, data);
+  btn.disabled = false;
+}
+
+function fmt(t){
+  let html = "", inList = false;
+  for(const l of esc(t).split("\n")){
+    const m = l.match(/^\s*[*\-]\s+(.*)/);
+    if(m){ if(!inList){ html += "<ul>"; inList = true; } html += `<li>${m[1]}</li>`; }
+    else { if(inList){ html += "</ul>"; inList = false; } if(l.trim()) html += `<p>${l}</p>`; }
+  }
+  if(inList) html += "</ul>";
+  return html.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>")
+    .replace(/\[(\d+)\]/g,(m,n)=>`<a class="cite" href="#s${n}" aria-label="Source ${n}">${n}</a>`);
+}
+
+function render(query, d){
+  const sources = d.sources || d.citations || [];
+  const text = fmt(d.answer || d.response || "No answer returned.");
+  lastTopic = d.topic || null;
+  const followed = lastTopic && store.get().some(t=>t.name===lastTopic);
+  $("#out").innerHTML = `
+  <article class="answer">
+    <div class="q">${esc(query)}</div>
+    <div class="body" dir="auto">${text}</div>
+  </article>
+  ${d.notice ? `<div class="item">${esc(d.notice)}</div>` : ""}
+  ${!followed ? `<div class="follow"><span>Keep this topic up to date:</span><input id="ftopic" maxlength="100" dir="auto" value="${esc(lastTopic || query.slice(0,100))}" aria-label="Topic to follow"><button id="fol">Follow topic</button></div>` : ""}
+  ${sources.length?`<h2>Sources</h2><div class="sources">${sources.map((s,i)=>{
+    const v = normScore(s), pct = Math.round(v/SCORE_MAX*100);
+    return `<a class="src" id="s${i+1}" href="${esc(s.url||"#")}" target="_blank" rel="noopener noreferrer">
+      <div class="ring" style="--v:${pct};--c:${ringColor(pct)}" title="Credibility score"><b>${v.toFixed(1)}</b></div>
+      <div><h3 dir="auto">${i+1}. ${esc(s.title||s.url||"Source")}</h3><small>Credibility ${v.toFixed(1)} of ${SCORE_MAX}</small></div></a>`}).join("")}</div>`:""}`;
+  const f = $("#fol"); if(f) f.onclick = ()=>follow($("#ftopic").value.trim());
+}
+
+/* ---------- topics ---------- */
+async function follow(name){
+  const msg = $(".follow span");
+  if(name.split(/\s+/).filter(Boolean).length < 2){ if(msg) msg.textContent = "Use at least two words for the topic."; return; }
+  if(!demo){
+    try{ await api("/subscribe",{method:"POST",body:JSON.stringify({topic:name,frequency:"daily"})}); }
+    catch(e){ if(msg) msg.textContent = e.message==="rate" ? "Too many follow requests. Try again in a minute." : "Couldn't follow this topic. Try rewording it."; return; }
+  }
+  const list = store.get();
+  if(!list.some(t=>t.name===name)) list.push({name, added:Date.now()});
+  store.set(list);
+  const f=$("#fol"); if(f) f.parentElement.innerHTML = "Added to your topics ✓";
+}
+function renderTopics(){
+  const list = store.get();
+  $("#tlist").innerHTML = list.length ? list.map((t,i)=>`
+    <div class="topic"><div><span class="t" dir="auto">${esc(t.name)}</span><small>Following since ${new Date(t.added).toLocaleDateString("en-US")}</small></div>
+    <button class="ghost" data-i="${i}">Unfollow</button></div>`).join("")
+    : `<div class="empty">No topics yet. Ask a question and follow the topic below the answer.</div>`;
+}
+$("#tlist").onclick = async e => {
+  const b = e.target.closest("button[data-i]"); if(!b) return;
+  const l = store.get(); const [gone] = l.splice(+b.dataset.i,1); store.set(l); renderTopics();
+  if(gone && !demo){ try{ await api("/subscribe/"+encodeURIComponent(gone.name),{method:"DELETE"}); }catch(err){} }
+};
+
+/* ---------- digest ---------- */
+function renderDigestChips(){
+  const list = store.get();
+  $("#dchips").innerHTML = list.map(t=>`<button class="chip">${esc(t.name)}</button>`).join("");
+  $("#dout").innerHTML = list.length ? "" : `<div class="empty">Follow a topic first and its updates will show up here.</div>`;
+}
+$("#dchips").onclick = async e => {
+  if(!e.target.matches(".chip")) return;
+  const topic = e.target.textContent, out = $("#dout");
+  out.innerHTML = `<div class="status"><span class="pulse"></span><span>Loading…</span></div>`;
+  try{
+    const d = await api("/digest/"+encodeURIComponent(topic));
+    const raw = d.digest ?? d.items ?? d.entries ?? [];
+    const items = Array.isArray(raw) ? raw : String(raw).split(/\n{2,}/).filter(Boolean);
+    out.innerHTML = items.length ? items.map(i=>`<div class="item" dir="auto">${esc(typeof i==="string"?i:(i.title||i.text||JSON.stringify(i)))}</div>`).join("") : `<div class="empty">Nothing new on this topic yet.</div>`;
+  }catch(err){
+    if(err.message==="http 404"){ out.innerHTML = `<div class="empty">No digest for this topic yet. The first one appears after the initial research finishes.</div>`; return; }
+    out.innerHTML = `<div class="err">Couldn't load updates. Check that the server is running and try again.</div>`;
+  }
+};
+</script>
+</body>
+</html>
