@@ -13,7 +13,7 @@ load_dotenv()
 
 EMBEDDING_DIMENSION = 384
 TOP_K = 5
-MIN_SIMILARITY = 0.80  # مؤقت: اضبطه بالأرقام الفعلية
+MIN_SIMILARITY = 0.80
 MIN_GOOD_RESULTS = 2
 MAX_CONTEXT_CHARS_PER_SOURCE = 400
 TOPIC_MIN_WORDS = 2
@@ -21,9 +21,23 @@ TOPIC_MAX_WORDS = 8
 TOPIC_ATTEMPTS = 2
 CLIENT_TOPIC_MAX_CHARS = 100
 
+NO_ANSWER_MARKER = "NO_ANSWER"
+NO_ANSWER_PHRASES = (
+    "do not contain",
+    "does not contain",
+    "do not answer",
+    "does not answer",
+    "not covered in the sources",
+    "no information on",
+)
+NO_ANSWER_MAX_CHARS = 250
+
 ANSWER_SYSTEM_PROMPT = (
     "You are a research assistant. Answer the user's question using ONLY the "
     "numbered sources provided. "
+    "First judge whether the sources actually address the question asked, not "
+    "merely the same general field. "
+    f"If they do not address it at all, reply with exactly {NO_ANSWER_MARKER} and nothing else. "
     "Reply in the same language as the question. "
     "Start directly with the answer, with no preamble such as 'Based on the context'. "
     "If the question asks for advice, start with the most important advice and make "
@@ -34,7 +48,6 @@ ANSWER_SYSTEM_PROMPT = (
     "disagree or a claim rests on a weak source. "
     "If the sources answer only part of the question, answer that part and add one "
     "sentence saying what is missing. "
-    "If they do not answer it at all, say so in one sentence. "
     "Never add facts that are not in the sources. "
     "For health or medical topics, add one short sentence recommending a "
     "professional for individual decisions."
@@ -157,39 +170,69 @@ def build_answer(query: str, results: list) -> str:
     ])
 
 
+def is_no_answer(answer: str) -> bool:
+    text = (answer or "").strip()
+    if not text:
+        return True
+    if text.upper().startswith(NO_ANSWER_MARKER):
+        return True
+    lowered = text.lower()
+    return len(text) <= NO_ANSWER_MAX_CHARS and any(p in lowered for p in NO_ANSWER_PHRASES)
+
+
+def attempt_research(query: str, topic: str = None):
+    client_topic = (topic or "").strip()[:CLIENT_TOPIC_MAX_CHARS]
+    if client_topic and not is_valid_topic(client_topic):
+        client_topic = ""
+    used_topic = client_topic or extract_topic(query)
+
+    if not used_topic:
+        notice = (
+            "I couldn't turn your question into a clear search topic, so I did not "
+            "search for new sources. Try rephrasing, or send an explicit topic."
+        )
+        return None, "topic_unclear", notice, False
+
+    if research_topic(used_topic):
+        return used_topic, "researched", f"I searched for new sources on: {used_topic}", True
+
+    notice = f"I tried to research '{used_topic}' but the search failed."
+    return used_topic, "research_failed", notice, False
+
+
 def answer_question(query: str, auto_research: bool = True, topic: str = None) -> dict:
     results = keep_relevant(retrieve([query]))
     used_topic = None
     status = "not_needed"
     notice = None
+    searched = False
 
     if len(results) < MIN_GOOD_RESULTS and auto_research:
-        client_topic = (topic or "").strip()[:CLIENT_TOPIC_MAX_CHARS]
-        if client_topic and not is_valid_topic(client_topic):
-            client_topic = ""
-        used_topic = client_topic or extract_topic(query)
-
-        if not used_topic:
-            status = "topic_unclear"
-            notice = (
-                "I couldn't turn your question into a clear search topic, so I did not "
-                "search for new sources and answered from existing knowledge only. "
-                "Try rephrasing, or send an explicit topic."
-            )
-        elif research_topic(used_topic):
-            status = "researched"
-            notice = f"I searched for new sources on: {used_topic}"
+        used_topic, status, notice, ok = attempt_research(query, topic)
+        searched = True
+        if ok:
             results = keep_relevant(retrieve([query, used_topic]))
-        else:
-            status = "research_failed"
-            notice = (
-                f"I tried to research '{used_topic}' but the search failed, so I "
-                "answered from existing knowledge only."
-            )
 
-    if not results:
+    answer = build_answer(query, results) if results else None
+
+    if answer is not None and is_no_answer(answer):
+        answer = None
+        if auto_research and not searched:
+            used_topic, status, notice, ok = attempt_research(query, topic)
+            searched = True
+            if ok:
+                results = keep_relevant(retrieve([query, used_topic]))
+                if results:
+                    retry = build_answer(query, results)
+                    if not is_no_answer(retry):
+                        answer = retry
+
+    if answer is None:
+        if status == "researched":
+            status = "searched_no_results"
+            notice = f"I searched for new sources on: {used_topic}, but found nothing that answers your question."
         return {
-            "answer": "I couldn't find reliable sources on this yet.",
+            "answer": "I couldn't find reliable sources that answer this yet.",
             "sources": [],
             "topic": used_topic,
             "research_status": status,
@@ -197,7 +240,7 @@ def answer_question(query: str, auto_research: bool = True, topic: str = None) -
         }
 
     return {
-        "answer": build_answer(query, results),
+        "answer": answer,
         "sources": results,
         "topic": used_topic,
         "research_status": status,
